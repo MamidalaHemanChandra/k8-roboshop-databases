@@ -1,53 +1,47 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: catalogue
+  name: cart
   namespace: roboshop
 data:
-  MONGO: "true"
-  MONGO_URL: "mongodb://mongodb:27017/catalogue"
+  REDIS_HOST: "redis"
+  CATALOGUE_HOST: "catalogue"
+  CATALOGUE_PORT: "8080"
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catalogue
+  name: cart
   namespace: roboshop
   labels:
     project: roboshop
-    component: catalogue
+    component: cart
     tier: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
       project: roboshop
-      component: catalogue
+      component: cart
       tier: backend
   template:
     metadata:
       labels:
         project: roboshop
-        component: catalogue
+        component: cart
         tier: backend
     spec:
       containers:
-      - name: catalogue
-        image: mamidalahemanchandra/catalogue:v1
+      - name: cart
+        image: mamidalahemanchandra/cart:v1
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
-            name: catalogue
+            name: cart
         ports:
         - name: liveness-port
           containerPort: 8080
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "300m"
-            memory: "256Mi"
         livenessProbe:
           httpGet:
             path: /health
@@ -62,6 +56,21 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: roboshop
+spec:
+  selector:
+    project: roboshop
+    component: cart
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -81,7 +90,7 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: catalogue
+  name: cart
   namespace: roboshop
 spec:
   scaleTargetRef:
@@ -93,7 +102,7 @@ spec:
   metrics:
   - type: Resource
     resource:
-      name: cpu
+      name: cart
       target:
         type: Utilization
         averageUtilization: 50
