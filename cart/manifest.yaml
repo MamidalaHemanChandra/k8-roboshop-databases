@@ -82,12 +82,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: catalogue
+  name: cart
   namespace: roboshop
 spec:
   selector:
     project: roboshop
-    component: catalogue
+    component: cart
     tier: backend
   ports:
   - protocol: TCP
@@ -103,7 +103,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: catalogue
+    name: cart
   minReplicas: 1
   maxReplicas: 10
   metrics:
